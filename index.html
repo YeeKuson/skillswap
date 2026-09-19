@@ -510,6 +510,19 @@ const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm = s => String(s).trim().toLowerCase();
 
+/* 附件离线打开（file://）时的兼容处理：
+   - location.origin 返回字符串 "null"，直接拼接会生成坏链接，回落线上规范地址
+   - history.replaceState 抛 SecurityError，需静默忽略，否则后续渲染全部中断 */
+const CANONICAL_BASE = "https://yeekuson.github.io/skillswap/";
+const OFFLINE_MODE = location.protocol === "file:" || location.origin === "null";
+const SHARE_BASE = OFFLINE_MODE ? CANONICAL_BASE : location.origin + location.pathname;
+function clearQuery(){
+  try{
+    const q = location.search.replace(/[?&]s=[^&]*/, "").replace(/^&/, "?").replace(/^\?$/, "");
+    history.replaceState(null, "", location.pathname + q);
+  }catch(e){ /* file:// 下浏览器拒绝改写地址，忽略即可，不影响功能 */ }
+}
+
 /* 图标：内联 SVG，保证状态同时有文案 + 图标 + 颜色 */
 const ICON = {
   check:'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -755,7 +768,7 @@ function renderProposal(){
         });
         persist();
         PEER = null;
-        history.replaceState(null, "", location.pathname + location.search.replace(/[?&]s=[^&]*/,"").replace(/^&/,"?"));
+        clearQuery();
         renderAll();
         toast("交换已建立 · 等待对方确认", "success");
         go("exchanges");
@@ -763,7 +776,7 @@ function renderProposal(){
     };
   }
   const dis = $("#dismissBtn");
-  if(dis) dis.onclick = () => { PEER = null; renderAll(); history.replaceState(null, "", location.pathname); };
+  if(dis) dis.onclick = () => { PEER = null; renderAll(); clearQuery(); };
 }
 
 /* ---------- 发现匹配 ---------- */
@@ -933,6 +946,9 @@ function renderTask(state, payload){
         '<button class="btn btn-ghost btn-sm" id="testBtn">在新标签打开（预览对方视角）</button>' +
         '<span class="mbio" id="copyState" role="status" aria-live="polite"></span>' +
       '</div>' +
+      (OFFLINE_MODE
+        ? '<div class="mbio" style="margin-top:10px">当前是本地文件打开，链接已按线上地址生成，可直接复制分享。</div>'
+        : '') +
     '</div>';
   const ta = $("#linkOut");
   $("#copyBtn").onclick = async () => {
@@ -975,7 +991,7 @@ function runTask(id, panelId){
       };
       if(!ME.teach.length && !ME.learn.length) throw new Error("empty");
       const code = encodeProfile(payload);
-      const url = location.origin + location.pathname + "?s=" + code;
+      const url = SHARE_BASE + "?s=" + code;
       renderTask("succeeded", {taskId:id, url:url});
     }catch(err){
       renderTask("failed", {taskId:id});
