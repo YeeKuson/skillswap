@@ -1,210 +1,368 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SkillSwap 技能交换所 · 用你会的，换你想学的</title>
-<meta name="description" content="技能互换平台：发布你能教的和想学的，系统双向匹配，零成本互教互学。" />
+<meta name="description" content="技能互换平台：发布你能教的和想学的，生成交换链接，系统当场做双向互补匹配，零成本互教互学。">
 <style>
+/* =========================================================
+   设计令牌 —— 由主色 #4F46E5 派生（hue 243.4）
+   ========================================================= */
 :root{
-  --bg:#f6f7fb; --card:#fff; --line:#e6e9f2;
-  --text:#0f172a; --muted:#64748b; --soft:#f2f4fa;
-  --primary:#4f46e5; --primary-soft:#eef0ff;
-  --teach:#059669; --teach-soft:#e6f6ef;
-  --learn:#4f46e5; --learn-soft:#eef0ff;
-  --warn:#b45309; --warn-soft:#fdf2e3;
-  --radius:14px;
-  --shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
+  --primary-h:243.4;
+  --primary-soft:#E7E6F5;
+  --primary-light:#A39FE8;
+  --primary:#4F46E5;
+  --primary-dark:#261CC8;
+  --primary-darker:#201992;
+
+  --background:#F9F9FB;
+  --surface:#F7F6F8;
+  --surface-strong:#EDEDF2;
+  --surface-muted:#E6E6EA;
+
+  --foreground:#1E1B56;
+  --foreground-muted:#3B3776;
+  --foreground-subtle:#57538D;
+  --on-primary:#FFFFFF;
+
+  --border:#D6D5E2;
+  --border-strong:#8D8AB0;
+
+  /* 语义色按 WCAG 实测加深：原派生值在浅色底上仅 3.4–4.1:1，不达正文 4.5:1 */
+  --success:#166534;
+  --warning:#D58515;
+  --warning-ink:#7A4E06;
+  --info:#1B5FA8;
+  --destructive:#B02A16;
+  --success-soft:#E3F4E9;
+  --warning-soft:#FBF0DD;
+  --info-soft:#E3EFFA;
+  --destructive-soft:#FBE7E3;
+
+  --shadow-xs:0 1px 2px hsla(243.4,30.1%,30%,.08);
+  --shadow-sm:0 2px 8px hsla(243.4,30.1%,30%,.12);
+  --shadow-md:0 8px 24px hsla(243.4,30.1%,30%,.16);
+  --shadow-lg:0 16px 40px hsla(243.4,30.1%,30%,.20);
+  --shadow-xl:0 24px 64px hsla(243.4,30.1%,30%,.24);
+
+  --dur-xs:120ms;
+  --dur-sm:180ms;
+  --dur-md:260ms;
+  --dur-lg:400ms;
+  --ease-standard:cubic-bezier(.4,0,.2,1);
+  --ease-decelerate:cubic-bezier(0,0,.2,1);
+  --ease-accelerate:cubic-bezier(.4,.14,1,1);
+  --spring-soft:cubic-bezier(.25,.46,.45,.94);
+  --spring-medium:cubic-bezier(.22,1.2,.36,1);
+
+  --z-base:0;
+  --z-sticky:20;
+  --z-popover:40;
+  --z-toast:60;
+  --z-modal:80;
+
+  --radius-sm:10px;
+  --radius-md:14px;
+  --radius-lg:18px;
+  --radius-full:999px;
+
+  --glass-bg:hsla(243.4,18%,98%,.82);
+  --glass-bg-strong:hsla(243.4,20%,99%,.93);
+  --glass-border:rgba(255,255,255,.58);
+  --glass-inset:inset 0 1px 0 rgba(255,255,255,.62);
+  --blur-card:blur(12px) saturate(1.3);
+  --blur-panel:blur(20px) saturate(1.3);
+  --blur-pill:blur(9px) saturate(1.3);
 }
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 body{
-  background:var(--bg); color:var(--text); font-size:15px; line-height:1.6;
+  margin:0;background:var(--background);color:var(--foreground);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-  -webkit-font-smoothing:antialiased;
+  font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(1100px 520px at 8% -8%,hsla(var(--primary-h),68%,88%,.55),transparent 62%),
+    radial-gradient(900px 460px at 96% 4%,hsla(196,72%,88%,.42),transparent 60%);
+  background-attachment:fixed;
 }
-button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
-h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:-.01em}
+h1,h2,h3{margin:0;font-weight:680;letter-spacing:-.015em;line-height:1.32}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+:focus-visible{outline:3px solid var(--info);outline-offset:2px;border-radius:6px}
 
-/* ---------- layout ---------- */
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
-header.top{
-  position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);
-  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
-}
-.top-in{display:flex;align-items:center;gap:20px;height:62px;max-width:1080px;margin:0 auto;padding:0 20px}
-.logo{display:flex;align-items:center;gap:9px;font-weight:750;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
-.logo .mk{
-  width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:#fff;font-size:15px;
-  background:linear-gradient(135deg,#4f46e5,#0ea5e9);
-}
-nav.tabs{display:flex;gap:4px;margin-left:auto}
-nav.tabs button{
-  padding:7px 14px;border-radius:9px;color:var(--muted);font-weight:550;font-size:14px;transition:.15s;
-}
-nav.tabs button:hover{background:var(--soft);color:var(--text)}
-nav.tabs button.on{background:var(--primary-soft);color:var(--primary)}
-nav.tabs .cnt{
-  display:inline-block;min-width:17px;padding:0 5px;margin-left:5px;border-radius:9px;
-  background:var(--primary);color:#fff;font-size:11px;line-height:17px;text-align:center;vertical-align:1px;
-}
-main{padding:26px 0 70px}
-.view{display:none}
-.view.on{display:block;animation:fade .25s ease}
-@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+/* ---------- 布局 ---------- */
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.top{position:sticky;top:0;z-index:var(--z-sticky);
+  background:var(--glass-bg);border-bottom:1px solid var(--border);
+  -webkit-backdrop-filter:var(--blur-card);backdrop-filter:var(--blur-card)}
+.top-in{display:flex;align-items:center;gap:18px;min-height:64px;max-width:1120px;margin:0 auto;padding:8px 20px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px;font-weight:750;font-size:17px;letter-spacing:-.02em}
+.logo .mk{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:var(--on-primary);font-size:16px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark) 58%,var(--primary-darker));
+  box-shadow:var(--shadow-sm),var(--glass-inset)}
+.logo .sub{font-weight:500;color:var(--foreground-subtle);font-size:13.5px}
+nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav.tabs button{min-height:44px;padding:0 15px;border-radius:var(--radius-full);color:var(--foreground-muted);font-weight:600;font-size:14px;
+  transition:background var(--dur-sm) var(--ease-standard),color var(--dur-sm) var(--ease-standard),transform var(--dur-xs) var(--ease-standard)}
+nav.tabs button:hover{background:var(--surface-strong);color:var(--foreground);transform:translateY(-1px)}
+nav.tabs button:active{transform:scale(.97)}
+nav.tabs button[aria-selected="true"]{background:var(--primary-soft);color:var(--primary-dark)}
+nav.tabs .cnt{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:var(--radius-full);
+  background:var(--primary);color:var(--on-primary);font-size:11.5px;line-height:18px;text-align:center;vertical-align:1px;font-weight:700}
+main{padding:26px 0 80px}
+.view[hidden]{display:none}
 
-/* ---------- hero ---------- */
-.hero{
-  background:linear-gradient(120deg,#4f46e5 0%,#5b5bf0 45%,#0ea5e9 100%);
-  border-radius:20px;padding:30px 32px;color:#fff;position:relative;overflow:hidden;
-  box-shadow:0 14px 40px rgba(79,70,229,.28);
+/* ---------- 毛玻璃表面 ---------- */
+.glass{
+  background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);
+  -webkit-backdrop-filter:var(--blur-card);backdrop-filter:var(--blur-card);
+  box-shadow:var(--shadow-sm),var(--glass-inset);
 }
-.hero:after{
-  content:"";position:absolute;right:-70px;top:-90px;width:300px;height:300px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.22),transparent 68%);
+.glass-strong{
+  background:var(--glass-bg-strong);border:1px solid var(--glass-border);border-radius:var(--radius-lg);
+  -webkit-backdrop-filter:var(--blur-panel);backdrop-filter:var(--blur-panel);
+  box-shadow:var(--shadow-lg),var(--glass-inset);
 }
-.hero h1{font-size:27px;line-height:1.35;margin-bottom:8px;position:relative}
-.hero p{margin:0;opacity:.9;font-size:14.5px;max-width:600px;position:relative}
-.stats{display:flex;gap:30px;margin-top:22px;flex-wrap:wrap;position:relative}
-.stats .s b{display:block;font-size:23px;font-weight:750;line-height:1.25}
-.stats .s span{font-size:12.5px;opacity:.82}
-.hero-badge{
-  position:absolute;right:30px;top:30px;padding:4px 11px;border-radius:20px;font-size:12px;
-  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:hsla(243.4,18%,99%,.97)}
+  .glass-strong{background:hsla(243.4,20%,100%,.99)}
+  .top{background:hsla(243.4,18%,99%,.98)}
+  .task-pill,.toast,.modal-card{background:hsla(243.4,20%,100%,.99)}
 }
 
-/* ---------- generic ---------- */
-.sec-head{display:flex;align-items:baseline;gap:11px;margin:30px 0 14px}
-.sec-head h2{font-size:18px}
-.sec-head .sub{color:var(--muted);font-size:13px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-.pill{
-  display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;
-  font-size:12.5px;font-weight:550;line-height:1.7;white-space:nowrap;
-}
-.p-teach{background:var(--teach-soft);color:var(--teach)}
-.p-learn{background:var(--learn-soft);color:var(--learn)}
-.p-gray{background:var(--soft);color:var(--muted)}
-.p-star{background:linear-gradient(120deg,#fef3c7,#fde68a);color:#92400e;font-weight:650}
-.btn{
-  padding:8px 15px;border-radius:10px;font-weight:600;font-size:13.5px;transition:.15s;
-  background:var(--soft);color:var(--text);
-}
-.btn:hover{filter:brightness(.96)}
-.btn.primary{background:var(--primary);color:#fff}
-.btn.primary:hover{background:#4338ca;filter:none}
-.btn.done{background:var(--teach-soft);color:var(--teach);cursor:default}
-.btn[disabled]{opacity:.5;cursor:not-allowed}
+/* ---------- 动效 ---------- */
+@keyframes fade-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes pop-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes slide-up{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stagger{animation:fade-up var(--dur-md) var(--ease-decelerate) both;animation-delay:calc(var(--i,0) * 30ms)}
 
-/* ---------- match card ---------- */
-.mlist{display:flex;flex-direction:column;gap:13px}
-.mcard{padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:.18s}
-.mcard:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.07),0 14px 34px rgba(15,23,42,.09)}
-.mcard.bi{border-color:#c7d2fe;background:linear-gradient(180deg,#fbfcff,#fff)}
-.av{
-  width:46px;height:46px;flex:0 0 46px;border-radius:13px;display:grid;place-items:center;font-size:23px;
-  background:var(--soft);
-}
+/* ---------- 通用控件 ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:44px;padding:10px 17px;border-radius:var(--radius-full);font-weight:640;font-size:14px;
+  background:var(--surface-strong);color:var(--foreground);
+  transition:transform var(--dur-xs) var(--ease-standard),box-shadow var(--dur-sm) var(--ease-standard),background var(--dur-sm) var(--ease-standard)}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+/* 渐变端点避开 primary-light：#A39FE8 上的白字仅 2.42:1 */
+.btn-primary{color:var(--on-primary);
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark) 58%,var(--primary-darker));
+  box-shadow:var(--shadow-sm),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn-primary:hover{box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn-ghost{background:transparent;border:1px solid var(--border-strong);color:var(--foreground-muted)}
+.btn-danger{background:var(--destructive-soft);color:var(--destructive);border:1px solid #EFC3B9}
+.btn-sm{min-height:38px;padding:7px 13px;font-size:13.5px}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:var(--radius-full);
+  font-size:12.5px;font-weight:640;line-height:1.75;white-space:nowrap}
+.pill svg{flex:0 0 auto}
+.p-teach{background:var(--success-soft);color:var(--success)}
+.p-learn{background:var(--primary-soft);color:var(--primary-dark)}
+.p-gray{background:var(--surface-strong);color:var(--foreground-subtle)}
+.p-star{background:linear-gradient(120deg,#FCEFC7,#F7DC9B);color:#7A4E06}
+.p-warn{background:var(--warning-soft);color:var(--warning-ink)}
+.p-info{background:var(--info-soft);color:var(--info)}
+.p-danger{background:var(--destructive-soft);color:var(--destructive)}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;overflow:hidden;border-radius:22px;padding:32px 34px;color:var(--on-primary);
+  background:linear-gradient(135deg,var(--primary-dark),var(--primary) 52%,var(--primary-darker));
+  box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.22)}
+.hero::after{content:"";position:absolute;right:-80px;top:-110px;width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.20),transparent 68%);pointer-events:none}
+.hero h1{font-size:clamp(21px,3.2vw,29px);margin-bottom:9px;position:relative}
+.hero p{margin:0;opacity:.94;font-size:14.5px;max-width:640px;position:relative}
+.hero .tag{position:absolute;right:30px;top:28px;padding:4px 12px;border-radius:var(--radius-full);font-size:12px;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.32)}
+.stats{display:flex;gap:32px;margin-top:24px;flex-wrap:wrap;position:relative}
+.stats b{display:block;font-size:24px;font-weight:760;line-height:1.2}
+.stats span{font-size:12.5px;opacity:.86}
+
+/* ---------- 交换提案（核心新增） ---------- */
+.proposal{margin-top:22px;padding:22px 24px;border:1.5px solid var(--primary-light);position:relative;animation:pop-in var(--dur-lg) var(--spring-medium) both}
+.proposal .ph{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.proposal .ph h2{font-size:17px}
+.deal{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:var(--radius-md);
+  background:var(--surface);flex-wrap:wrap;margin:14px 0}
+.deal .side{flex:1;min-width:160px}
+.deal .side .lb{font-size:11.5px;font-weight:700;letter-spacing:.04em;margin-bottom:5px}
+.deal .side .v{font-size:14.5px;font-weight:640}
+.swap{font-size:21px;color:var(--primary);flex:0 0 auto}
+.hours{display:flex;gap:22px;flex-wrap:wrap;padding:14px 18px;border-radius:var(--radius-md);
+  background:var(--info-soft);border:1px solid #C6DEF5}
+.hours .grp{display:flex;align-items:center;gap:10px}
+.hours .grp .lb{font-size:13px;font-weight:640;color:var(--foreground-muted)}
+.stepper{display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-full);padding:2px}
+.stepper button{width:38px;height:38px;min-width:38px;border-radius:var(--radius-full);font-size:17px;font-weight:700;color:var(--primary-dark);
+  display:grid;place-items:center;transition:background var(--dur-xs) var(--ease-standard),transform var(--dur-xs) var(--ease-standard)}
+.stepper button:hover{background:var(--primary-soft)}
+.stepper button:active{transform:scale(.9)}
+.stepper button[disabled]{opacity:.4;cursor:not-allowed}
+.stepper .val{min-width:52px;text-align:center;font-weight:700;font-size:14.5px;font-variant-numeric:tabular-nums}
+.hours .note{font-size:12.5px;color:var(--foreground-subtle);flex-basis:100%;margin-top:2px}
+
+/* ---------- 匹配卡 ---------- */
+.sec-head{display:flex;align-items:baseline;gap:12px;margin:32px 0 14px;flex-wrap:wrap}
+.sec-head h2{font-size:18.5px}
+.sec-head .sub{color:var(--foreground-subtle);font-size:13px}
+.mlist{display:flex;flex-direction:column;gap:14px}
+.mcard{padding:19px 21px;display:flex;gap:16px;align-items:flex-start;border-radius:var(--radius-lg);
+  transition:transform var(--dur-sm) var(--ease-standard),box-shadow var(--dur-sm) var(--ease-standard)}
+.mcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-md),var(--glass-inset)}
+.mcard.bi{border-color:var(--primary);background:linear-gradient(180deg,hsla(243.4,60%,99%,.9),var(--glass-bg))}
+.av{width:48px;height:48px;flex:0 0 48px;border-radius:15px;display:grid;place-items:center;font-size:23px;
+  background:var(--surface-strong);box-shadow:var(--shadow-xs),inset 0 1px 0 rgba(255,255,255,.7)}
 .mbody{flex:1;min-width:0}
 .mtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.mtop .nm{font-weight:680;font-size:15.5px}
-.mtop .meta{color:var(--muted);font-size:12.5px}
-.row2{display:flex;gap:26px;margin-top:11px;flex-wrap:wrap}
-.col{min-width:0}
-.col .lb{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.03em;margin-bottom:5px}
+.mtop .nm{font-weight:700;font-size:15.5px}
+.mtop .meta{color:var(--foreground-subtle);font-size:12.5px}
+.mbio{color:var(--foreground-subtle);font-size:13px;margin-top:3px}
+.row2{display:flex;gap:26px;margin-top:12px;flex-wrap:wrap}
+.col .lb{font-size:11.5px;color:var(--foreground-subtle);font-weight:700;letter-spacing:.04em;margin-bottom:6px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{
-  padding:2.5px 9px;border-radius:8px;font-size:12.5px;background:var(--soft);color:#475569;
-  border:1px solid transparent;
-}
-.chip.hit{background:var(--teach-soft);color:var(--teach);border-color:#bfe8d6;font-weight:600}
-.chip.hit-l{background:var(--learn-soft);color:var(--learn);border-color:#d3d8fb;font-weight:600}
-.reason{
-  margin-top:12px;padding:9px 13px;border-radius:10px;font-size:13.5px;
-  background:var(--soft);color:#475569;border-left:3px solid var(--primary);
-}
-.reason.bi{background:#f4f6ff;border-left-color:#4f46e5}
-.acts{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-.score{font-size:11.5px;color:var(--muted)}
+.chip{padding:3px 10px;border-radius:var(--radius-sm);font-size:12.5px;background:var(--surface-strong);color:var(--foreground-muted);border:1px solid transparent}
+.chip.hit{background:var(--success-soft);color:var(--success);border-color:#BFE4CD;font-weight:640}
+.chip.hit-l{background:var(--primary-soft);color:var(--primary-dark);border-color:#CFCBF0;font-weight:640}
+.reason{margin-top:13px;padding:10px 14px;border-radius:var(--radius-sm);font-size:13.5px;
+  background:var(--surface);color:var(--foreground-muted);border-left:3px solid var(--border-strong)}
+.reason.bi{background:var(--primary-soft);border-left-color:var(--primary);color:var(--primary-darker)}
+.acts{flex:0 0 auto;display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+.score{font-size:11.5px;color:var(--foreground-subtle);font-variant-numeric:tabular-nums}
 
-/* ---------- profile ---------- */
+/* ---------- 档案 ---------- */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.panel{padding:20px}
-.panel h3{font-size:15px;margin-bottom:3px;display:flex;align-items:center;gap:7px}
-.panel .hint{color:var(--muted);font-size:12.5px;margin-bottom:13px}
-.dot{width:9px;height:9px;border-radius:3px;display:inline-block}
-.dot.t{background:var(--teach)}
-.dot.l{background:var(--learn)}
-.form{display:flex;gap:8px;margin-bottom:12px}
-.form input[type=text]{
-  flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;outline:none;
-  transition:.15s;min-width:0;
-}
+.panel{padding:21px}
+.panel h3{font-size:15.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.panel .hint{color:var(--foreground-subtle);font-size:12.5px;margin-bottom:14px}
+.dot{width:10px;height:10px;border-radius:4px;display:inline-block}
+.dot.t{background:var(--success)}.dot.l{background:var(--primary)}
+.form{display:flex;gap:8px;margin-bottom:13px;flex-wrap:wrap}
+.form input[type=text]{flex:1;min-width:130px;min-height:44px;padding:9px 13px;border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm);background:var(--surface);outline:none;transition:border-color var(--dur-sm) var(--ease-standard),box-shadow var(--dur-sm) var(--ease-standard)}
 .form input[type=text]:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
-.form select{padding:8px 9px;border:1px solid var(--line);border-radius:10px;background:#fff;outline:none}
-.slist{display:flex;flex-direction:column;gap:7px}
-.sitem{
-  display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;background:var(--soft);
-}
-.sitem .nm{font-weight:600;font-size:14px}
-.sitem .lv{font-size:12px;color:var(--muted)}
-.sitem .x{margin-left:auto;color:#94a3b8;font-size:16px;padding:0 4px;line-height:1}
-.sitem .x:hover{color:#ef4444}
-.empty{color:#94a3b8;font-size:13.5px;padding:14px;text-align:center;background:var(--soft);border-radius:10px}
-.profile-top{display:flex;gap:14px;align-items:center;margin-bottom:16px}
-.profile-top input{
-  flex:1;padding:9px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;outline:none;min-width:0;
-}
-.profile-top input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.form select{min-height:44px;padding:9px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface);outline:none}
+.slist{display:flex;flex-direction:column;gap:8px}
+.sitem{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--radius-sm);background:var(--surface);
+  animation:fade-up var(--dur-sm) var(--ease-decelerate) both}
+.sitem .nm{font-weight:640;font-size:14px}
+.sitem .lv{font-size:12px;color:var(--foreground-subtle)}
+.icon-btn{margin-left:auto;width:38px;height:38px;min-width:38px;border-radius:var(--radius-sm);display:grid;place-items:center;
+  color:var(--foreground-subtle);transition:background var(--dur-xs) var(--ease-standard),color var(--dur-xs) var(--ease-standard)}
+.icon-btn:hover{background:var(--destructive-soft);color:var(--destructive)}
+.icon-btn:active{transform:scale(.92)}
+.empty{color:var(--foreground-subtle);font-size:13.5px;padding:15px;text-align:center;background:var(--surface);border-radius:var(--radius-sm)}
+.save-state{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--foreground-subtle);
+  padding:5px 11px;border-radius:var(--radius-full);background:var(--surface);transition:color var(--dur-sm) var(--ease-standard)}
+.save-state[data-state="saving"]{color:var(--info)}
+.save-state[data-state="saved"]{color:var(--success)}
 
-/* ---------- exchange ---------- */
-.ex{padding:18px 20px;margin-bottom:12px}
-.ex .hd{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
-.ex .deal{
-  display:flex;align-items:center;gap:12px;margin:14px 0;padding:14px 16px;border-radius:12px;
-  background:var(--soft);flex-wrap:wrap;
-}
-.ex .deal .side{flex:1;min-width:150px}
-.ex .deal .side .lb{font-size:11.5px;font-weight:650;letter-spacing:.03em;margin-bottom:4px}
-.ex .deal .side .v{font-size:14.5px;font-weight:600}
-.swap-ico{font-size:20px;color:var(--primary)}
-.steps{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-.step{
-  flex:1;min-width:78px;text-align:center;font-size:11.5px;padding:6px 4px;border-radius:8px;
-  background:var(--soft);color:#94a3b8;font-weight:600;
-}
-.step.on{background:var(--primary);color:#fff}
-.step.past{background:var(--teach-soft);color:var(--teach)}
+/* ---------- 任务胶囊 ---------- */
+.task-pill{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:9px 16px;border-radius:var(--radius-full);
+  background:var(--glass-bg);border:1px solid var(--glass-border);font-size:13.5px;font-weight:640;
+  -webkit-backdrop-filter:var(--blur-pill);backdrop-filter:var(--blur-pill);
+  box-shadow:var(--shadow-sm),var(--glass-inset);transition:transform var(--dur-xs) var(--ease-standard)}
+.task-pill[data-state="running"]{cursor:progress}
+.task-pill[data-state="succeeded"]{cursor:pointer;color:var(--success)}
+.task-pill[data-state="failed"]{color:var(--destructive);cursor:pointer}
+.spinner{width:15px;height:15px;border-radius:50%;border:2px solid var(--primary-soft);border-top-color:var(--primary);
+  animation:spin .7s linear infinite;flex:0 0 auto}
+.link-panel{margin-top:13px;padding:16px;border-radius:var(--radius-md);background:var(--surface-strong);
+  border:1px solid var(--border);animation:fade-up var(--dur-md) var(--ease-decelerate) both}
+.link-panel textarea{width:100%;min-height:74px;padding:11px 13px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);
+  background:var(--surface);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;resize:vertical;outline:none;line-height:1.5}
+.link-panel textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.link-panel .row{display:flex;gap:9px;margin-top:11px;flex-wrap:wrap;align-items:center}
 
-/* ---------- demand board ---------- */
-.demand{padding:18px 20px}
-.drow{display:flex;align-items:center;gap:12px;margin-bottom:11px}
-.drow:last-child{margin-bottom:0}
-.drow .nm{width:88px;font-size:13.5px;font-weight:600;flex:0 0 88px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar{flex:1;height:8px;border-radius:5px;background:var(--soft);overflow:hidden}
-.bar i{display:block;height:100%;border-radius:5px;transition:width .5s ease}
-.bar i.want{background:linear-gradient(90deg,#818cf8,#6366f1)}
-.bar i.can{background:linear-gradient(90deg,#34d399,#059669)}
-.drow .num{font-size:12.5px;color:var(--muted);width:96px;text-align:right;flex:0 0 auto}
-.legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
-.notice{
-  padding:11px 15px;border-radius:11px;background:var(--warn-soft);color:var(--warn);
-  font-size:13.5px;margin-top:14px;border-left:3px solid #f59e0b;
-}
-footer{color:#94a3b8;font-size:12.5px;text-align:center;padding:26px 20px 40px;line-height:1.9}
+/* ---------- 交换记录 ---------- */
+.ex{padding:19px 21px;margin-bottom:13px;border-radius:var(--radius-lg);animation:fade-up var(--dur-md) var(--ease-decelerate) both}
+.ex .hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ex .hd .nm{font-weight:700}
+.steps{display:flex;gap:6px;margin-top:13px;flex-wrap:wrap}
+.step{flex:1;min-width:80px;text-align:center;font-size:11.5px;padding:7px 5px;border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--foreground-subtle);font-weight:640;
+  display:flex;align-items:center;justify-content:center;gap:5px}
+.step.on{background:var(--primary);color:var(--on-primary)}
+.step.past{background:var(--success-soft);color:var(--success)}
 
-@media(max-width:760px){
-  .grid2{grid-template-columns:1fr}
-  .hero{padding:24px 22px}.hero h1{font-size:22px}
-  .hero-badge{display:none}
-  .stats{gap:20px}
-  .top-in{height:auto;padding:10px 16px;flex-wrap:wrap;gap:10px}
-  nav.tabs{margin-left:0;width:100%;overflow-x:auto}
-  .mcard{flex-direction:column}.acts{flex-direction:row;align-items:center;width:100%}
+/* ---------- 供需看板 ---------- */
+.drow{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.drow .nm{width:94px;flex:0 0 94px;font-size:13.5px;font-weight:640;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{flex:1;height:9px;border-radius:5px;background:var(--surface-strong);overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;border-radius:5px;transition:width var(--dur-lg) var(--ease-decelerate)}
+.bar i.want{background:linear-gradient(90deg,var(--primary-light),var(--primary))}
+.bar i.can{background:linear-gradient(90deg,#6FCB96,var(--success))}
+.drow .num{font-size:12.5px;color:var(--foreground-subtle);width:104px;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:18px;font-size:12px;color:var(--foreground-subtle);margin-top:15px;padding-top:13px;border-top:1px solid var(--border);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.notice{display:flex;gap:9px;align-items:flex-start;padding:12px 16px;border-radius:var(--radius-md);
+  background:var(--warning-soft);color:var(--warning-ink);font-size:13.5px;margin-top:15px;border-left:3px solid var(--warning-ink)}
+
+/* ---------- Toast (L2) ---------- */
+.toasts{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:var(--z-toast);
+  display:flex;flex-direction:column;gap:10px;align-items:center;width:calc(100% - 32px);max-width:460px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:11px;padding:12px 17px;border-radius:var(--radius-md);font-size:13.5px;font-weight:600;
+  background:var(--glass-bg-strong);border:1px solid var(--glass-border);
+  -webkit-backdrop-filter:var(--blur-panel);backdrop-filter:var(--blur-panel);
+  box-shadow:var(--shadow-lg),var(--glass-inset);animation:pop-in var(--dur-md) var(--spring-medium) both;
+  pointer-events:auto;max-width:100%}
+.toast[data-kind="error"]{border-left:4px solid var(--destructive);color:var(--destructive)}
+.toast[data-kind="success"]{border-left:4px solid var(--success);color:var(--success)}
+.toast[data-kind="info"]{border-left:4px solid var(--info);color:var(--info)}
+.toast .txt{flex:1;min-width:0}
+.toast .act{min-height:38px;padding:6px 13px;border-radius:var(--radius-full);font-weight:700;font-size:13px;
+  background:var(--surface-strong);color:var(--foreground);white-space:nowrap}
+
+/* ---------- Modal (L3) ---------- */
+.modal{position:fixed;inset:0;z-index:var(--z-modal);display:grid;place-items:center;padding:20px;
+  background:hsla(var(--primary-h),32%,22%,.42);animation:fade-in var(--dur-sm) var(--ease-standard) both}
+.modal[hidden]{display:none}
+.modal-card{width:100%;max-width:440px;padding:24px;border-radius:var(--radius-lg);
+  background:var(--glass-bg-strong);border:1px solid var(--glass-border);
+  -webkit-backdrop-filter:var(--blur-panel);backdrop-filter:var(--blur-panel);
+  box-shadow:var(--shadow-xl),var(--glass-inset);animation:pop-in var(--dur-md) var(--spring-medium) both}
+.modal-card h3{font-size:17px;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+.modal-card p{margin:0 0 20px;font-size:14px;color:var(--foreground-muted)}
+.modal-card .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+
+footer{color:var(--foreground-subtle);font-size:12.5px;text-align:center;padding:30px 20px 44px;line-height:1.9}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:374px){
+  .wrap{padding:0 14px}
+  .hero{padding:22px 18px;border-radius:18px}
+  .hero .tag{display:none}
+  .mcard{flex-direction:column}
+  .acts{flex-direction:row;align-items:center;width:100%}
   .acts .btn{flex:1}
-  .row2{gap:14px}
+  .deal{flex-direction:column;align-items:stretch}
+  .swap{text-align:center;transform:rotate(90deg)}
+  .stepper button{width:44px;height:44px;min-width:44px}
+  .drow .nm{width:70px;flex:0 0 70px}
+  .drow .num{width:88px}
+}
+@media (min-width:768px){
+  .grid2{grid-template-columns:1fr 1fr}
+  .mlist{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .mlist .mcard{flex-direction:column}
+  .mlist .acts{flex-direction:row;align-items:center;width:100%}
+  .mlist .acts .btn{flex:1}
+}
+@media (min-width:1024px){
+  .wrap{padding:0 28px}
+  main{padding-top:30px}
+  .hero{padding:38px 40px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    scroll-behavior:auto !important;
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
 }
 </style>
 </head>
@@ -212,30 +370,38 @@ footer{color:#94a3b8;font-size:12.5px;text-align:center;padding:26px 20px 40px;l
 
 <header class="top">
   <div class="top-in">
-    <div class="logo"><span class="mk">⇄</span>SkillSwap<span style="font-weight:500;color:#94a3b8;font-size:14px">技能交换所</span></div>
-    <nav class="tabs">
-      <button data-go="discover" class="on">发现匹配</button>
-      <button data-go="profile">我的技能</button>
-      <button data-go="exchanges">交换申请<span class="cnt" id="exCnt">0</span></button>
+    <div class="logo">
+      <span class="mk" aria-hidden="true">⇄</span>
+      <span>SkillSwap</span><span class="sub">技能交换所</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="主导航">
+      <button role="tab" data-go="discover" aria-selected="true" aria-controls="v-discover">发现匹配</button>
+      <button role="tab" data-go="profile" aria-selected="false" aria-controls="v-profile">我的技能</button>
+      <button role="tab" data-go="exchanges" aria-selected="false" aria-controls="v-exchanges">
+        交换<span class="cnt" id="exCnt" hidden>0</span>
+      </button>
     </nav>
   </div>
 </header>
 
 <main class="wrap">
 
-  <!-- ============ 发现匹配 ============ -->
-  <section class="view on" id="v-discover">
+  <!-- ================= 发现匹配 ================= -->
+  <section class="view" id="v-discover" role="tabpanel" aria-label="发现匹配">
     <div class="hero">
-      <span class="hero-badge">笔试附加题 · 产品雏形</span>
-      <h1>用你会的，换你想学的<br/>不花一分钱，也不怕坚持不下去</h1>
-      <p>报班贵、自学难坚持、擅长的技能没处分享 —— 在这里发布「我能教」和「我想学」，系统做<b>双向互补匹配</b>：找到那个「你想学的 TA 会教，TA 想学的你也会」的人。</p>
+      <span class="tag">笔试附加题 · 产品雏形</span>
+      <h1>用你会的，换你想学的<br>不花一分钱，也不怕坚持不下去</h1>
+      <p>报班贵、自学难坚持、擅长的技能没处分享 —— 发布「我能教」和「我想学」，系统做<b>双向互补匹配</b>：找到那个「你想学的 TA 会教、TA 想学的你也会」的人。</p>
       <div class="stats">
-        <div class="s"><b id="stUsers">0</b><span>位技能持有者</span></div>
-        <div class="s"><b id="stSkills">0</b><span>个技能标签</span></div>
-        <div class="s"><b id="stMatch">0</b><span>条互补匹配</span></div>
-        <div class="s"><b id="stEx">0</b><span>次发起交换</span></div>
+        <div><b id="stUsers">0</b><span>位技能持有者</span></div>
+        <div><b id="stSkills">0</b><span>个技能标签</span></div>
+        <div><b id="stMatch">0</b><span>条互补匹配</span></div>
+        <div><b id="stEx">0</b><span>次发起交换</span></div>
       </div>
     </div>
+
+    <!-- 交换提案：对方通过链接分享档案时在此原位展开 -->
+    <div id="proposalSlot"></div>
 
     <div class="sec-head">
       <h2>为你匹配到的交换伙伴</h2>
@@ -245,386 +411,676 @@ footer{color:#94a3b8;font-size:12.5px;text-align:center;padding:26px 20px 40px;l
 
     <div class="sec-head">
       <h2>技能供需热度</h2>
-      <span class="sub">想学的人远多于能教的人 —— 你的技能可能正是稀缺品</span>
+      <span class="sub">想学的人多于能教的人 —— 你的技能可能正是稀缺品</span>
     </div>
-    <div class="card demand" id="demand"></div>
+    <div class="glass panel" id="demand"></div>
   </section>
 
-  <!-- ============ 我的技能 ============ -->
-  <section class="view" id="v-profile">
-    <div class="sec-head"><h2>我的技能档案</h2><span class="sub">填得越全，匹配越准</span></div>
-    <div class="card panel" style="margin-bottom:16px">
-      <div class="profile-top">
-        <div class="av" style="font-size:22px">🧑💻</div>
-        <input type="text" id="meName" placeholder="你的昵称" />
-        <input type="text" id="meCity" placeholder="所在城市（用于线下交换）" style="max-width:220px" />
+  <!-- ================= 我的技能 ================= -->
+  <section class="view" id="v-profile" role="tabpanel" aria-label="我的技能" hidden>
+    <div class="sec-head">
+      <h2>我的技能档案</h2>
+      <span class="save-state" id="saveState" data-state="idle" role="status" aria-live="polite">
+        <span aria-hidden="true">●</span><span id="saveText">资料自动保存</span>
+      </span>
+    </div>
+
+    <div class="glass panel" style="margin-bottom:16px">
+      <div class="form" style="margin-bottom:0">
+        <div class="av" style="font-size:22px" aria-hidden="true">🧑‍💻</div>
+        <input type="text" id="meName" placeholder="你的昵称" aria-label="你的昵称">
+        <input type="text" id="meCity" placeholder="所在城市（线下交换用）" aria-label="所在城市" style="max-width:240px">
       </div>
-      <div class="hint" style="margin:0">资料保存在本地浏览器，仅用于本页匹配演示。</div>
     </div>
 
     <div class="grid2">
-      <div class="card panel">
-        <h3><span class="dot t"></span>我能教</h3>
+      <div class="glass panel">
+        <h3><span class="dot t" aria-hidden="true"></span>我能教</h3>
         <div class="hint">你愿意拿出来分享、换取别人技能的本事</div>
         <div class="form">
-          <input type="text" id="teachInput" placeholder="例如：Python" />
-          <select id="teachLevel">
+          <input type="text" id="teachInput" placeholder="例如：Python" aria-label="添加我能教的技能">
+          <select id="teachLevel" aria-label="熟练程度">
             <option>入门</option><option selected>熟练</option><option>精通</option>
           </select>
-          <button class="btn primary" data-add="teach">添加</button>
+          <button class="btn btn-primary btn-sm" data-add="teach">添加</button>
         </div>
         <div class="slist" id="teachList"></div>
       </div>
 
-      <div class="card panel">
-        <h3><span class="dot l"></span>我想学</h3>
+      <div class="glass panel">
+        <h3><span class="dot l" aria-hidden="true"></span>我想学</h3>
         <div class="hint">一直想学却迟迟没开始的技能</div>
         <div class="form">
-          <input type="text" id="learnInput" placeholder="例如：吉他" />
-          <select id="learnLevel">
+          <input type="text" id="learnInput" placeholder="例如：吉他" aria-label="添加我想学的技能">
+          <select id="learnLevel" aria-label="当前水平">
             <option selected>零基础</option><option>入门</option><option>进阶</option>
           </select>
-          <button class="btn primary" data-add="learn">添加</button>
+          <button class="btn btn-primary btn-sm" data-add="learn">添加</button>
         </div>
         <div class="slist" id="learnList"></div>
       </div>
     </div>
+
+    <!-- 交换链接：纯静态实现真实两人交换 -->
+    <div class="glass panel" style="margin-top:16px">
+      <h3><span aria-hidden="true">🔗</span>生成我的交换链接</h3>
+      <div class="hint">
+        把链接发给想交换的朋友。对方打开后，系统<b>用你俩真实的档案当场做双向匹配</b> ——
+        不需要注册、不需要服务器，这一步就完成了真实的数据交换。
+      </div>
+      <div id="taskSlot"></div>
+    </div>
   </section>
 
-  <!-- ============ 交换申请 ============ -->
-  <section class="view" id="v-exchanges">
-    <div class="sec-head"><h2>我的交换</h2><span class="sub">一次交换 = 你教 TA 一门，TA 教你一门，课时对等</span></div>
+  <!-- ================= 交换记录 ================= -->
+  <section class="view" id="v-exchanges" role="tabpanel" aria-label="交换" hidden>
+    <div class="sec-head">
+      <h2>我的交换</h2>
+      <span class="sub">一次交换 = 你教 TA 一门，TA 教你一门，课时由双方约定</span>
+    </div>
     <div id="exList"></div>
   </section>
 
 </main>
 
 <footer>
-  SkillSwap 技能交换所 · 笔试附加题产品雏形<br/>
-  数据存储于浏览器本地，用于功能演示；真实产品需接入账号体系与撮合服务。
+  SkillSwap 技能交换所 · 笔试附加题产品雏形<br>
+  档案与交换记录存储于浏览器本地；跨用户交换通过「交换链接」传递档案实现，无需服务器。
 </footer>
+
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <h3 id="modalTitle"><span aria-hidden="true">⚠️</span><span id="modalTitleText"></span></h3>
+    <p id="modalBody"></p>
+    <div class="row">
+      <button class="btn btn-ghost" id="modalCancel">取消</button>
+      <button class="btn btn-danger" id="modalOk">确认删除</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* =========================================================
-   数据层
+   0. 工具
    ========================================================= */
-const SKILL_ICON = {
-  "python":"🐍","吉他":"🎸","摄影":"📷","视频剪辑":"🎬","英语口语":"🗣️","健身":"🏋️",
-  "数据分析":"📈","书法":"✍️","烘焙":"🍰","咖啡拉花":"☕","编曲":"🎹","后期修图":"🖼️",
-  "营养搭配":"🥗","雅思":"📘","vlog 策划":"📹","乐理":"🎼","excel":"📊","游泳":"🏊",
-  "手绘":"🎨","日语":"🇯🇵","瑜伽":"🧘","演讲":"🎙️","ppt":"📑"
-};
-const icon = s => SKILL_ICON[String(s).toLowerCase()] || "✨";
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm = s => String(s).trim().toLowerCase();
 
-/* 内置的技能持有者样本数据 */
-const SEED_USERS = [
-  { id:"u1", name:"林小满", avatar:"🎸", city:"上海", rating:4.9, bio:"乐队吉他手，周末有空",
-    teach:[{skill:"吉他",level:"精通"},{skill:"乐理",level:"熟练"}],
-    learn:[{skill:"Python",level:"零基础"},{skill:"英语口语",level:"入门"}] },
-  { id:"u2", name:"陈野", avatar:"📷", city:"北京", rating:4.8, bio:"自由摄影师，想转行做数据",
-    teach:[{skill:"摄影",level:"精通"},{skill:"后期修图",level:"熟练"}],
-    learn:[{skill:"Python",level:"入门"},{skill:"视频剪辑",level:"零基础"}] },
-  { id:"u3", name:"顾言", avatar:"🎹", city:"成都", rating:5.0, bio:"做编曲，想学点自动化",
-    teach:[{skill:"吉他",level:"精通"},{skill:"编曲",level:"熟练"}],
-    learn:[{skill:"Python",level:"零基础"},{skill:"数据分析",level:"入门"}] },
-  { id:"u4", name:"老K", avatar:"🏋️", city:"成都", rating:4.7, bio:"健身教练，带过 200+ 学员",
-    teach:[{skill:"健身",level:"精通"},{skill:"营养搭配",level:"熟练"}],
-    learn:[{skill:"Python",level:"零基础"},{skill:"咖啡拉花",level:"入门"}] },
-  { id:"u5", name:"Mona", avatar:"🗣️", city:"上海", rating:4.9, bio:"外企市场，雅思 8",
-    teach:[{skill:"英语口语",level:"精通"},{skill:"雅思",level:"熟练"}],
-    learn:[{skill:"Python",level:"入门"},{skill:"书法",level:"零基础"}] },
-  { id:"u6", name:"周予", avatar:"🎬", city:"杭州", rating:4.6, bio:"Vlog 剪辑师，想学门乐器",
-    teach:[{skill:"视频剪辑",level:"精通"},{skill:"Vlog 策划",level:"熟练"}],
-    learn:[{skill:"吉他",level:"零基础"},{skill:"书法",level:"入门"}] },
-  { id:"u7", name:"苏晚", avatar:"🍰", city:"广州", rating:4.8, bio:"开私房烘焙，想拍好看的产品图",
-    teach:[{skill:"烘焙",level:"精通"},{skill:"咖啡拉花",level:"熟练"}],
-    learn:[{skill:"摄影",level:"零基础"},{skill:"Excel",level:"入门"}] },
-  { id:"u8", name:"郑植", avatar:"✍️", city:"武汉", rating:4.9, bio:"书协会员，业余教字",
-    teach:[{skill:"书法",level:"精通"},{skill:"手绘",level:"熟练"}],
-    learn:[{skill:"视频剪辑",level:"零基础"},{skill:"演讲",level:"入门"}] },
-  { id:"u9", name:"吴旻", avatar:"📊", city:"南京", rating:4.5, bio:"咨询顾问，PPT 和表格是饭碗",
-    teach:[{skill:"Excel",level:"精通"},{skill:"PPT",level:"熟练"}],
-    learn:[{skill:"英语口语",level:"入门"},{skill:"健身",level:"零基础"}] }
-];
-
-const DEFAULT_ME = {
-  name:"我",
-  city:"上海",
-  avatar:"🧑💻",
-  teach:[{skill:"Python",level:"精通"},{skill:"数据分析",level:"熟练"}],
-  learn:[{skill:"吉他",level:"零基础"},{skill:"摄影",level:"入门"}]
+/* 图标：内联 SVG，保证状态同时有文案 + 图标 + 颜色 */
+const ICON = {
+  check:'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  star:'<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.6l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.4 4.2 13.4l.7-4.3-3.1-3 4.3-.6z"/></svg>',
+  warn:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.4L14.4 13H1.6L8 2.4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6.4v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11.2" r=".95" fill="currentColor"/></svg>',
+  info:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.3" stroke="currentColor" stroke-width="1.6"/><path d="M8 7.2v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="4.9" r=".95" fill="currentColor"/></svg>',
+  swap:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.6 5.4h9.2M9.4 2.8l2.6 2.6-2.6 2.6M13.4 10.6H4.2M6.6 8l-2.6 2.6L6.6 13.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  link:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6.6 9.4a2.9 2.9 0 004.1 0l2.2-2.2a2.9 2.9 0 00-4.1-4.1l-1 1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9.4 6.6a2.9 2.9 0 00-4.1 0L3.1 8.8a2.9 2.9 0 004.1 4.1l1-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  copy:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="5.4" y="5.4" width="8.2" height="8.2" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M10.6 5.4V4.2a2 2 0 00-2-2H4.2a2 2 0 00-2 2v4.4a2 2 0 002 2h1.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  trash:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.4 4.6h9.2M6.4 4.6V3.2a1 1 0 011-1h1.2a1 1 0 011 1v1.4M5 4.6l.5 8a1 1 0 001 .9h3a1 1 0 001-.9l.5-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  plus:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3.4v9.2M3.4 8h9.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  minus:'<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.4 8h9.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
 };
+const SKILL_ICON = {"python":"🐍","吉他":"🎸","摄影":"📷","视频剪辑":"🎬","英语口语":"🗣️","健身":"🏋️","数据分析":"📈","书法":"✍️","烘焙":"🍰","咖啡拉花":"☕","编曲":"🎹","后期修图":"🖼️","营养搭配":"🥗","雅思":"📘","vlog 策划":"📹","乐理":"🎼","excel":"📊","游泳":"🏊","手绘":"🎨","日语":"🇯🇵","瑜伽":"🧘","演讲":"🎙️","ppt":"📑"};
+const icon = s => SKILL_ICON[norm(s)] || "✨";
 
-const KEY_ME = "skillswap.me.v1";
-const KEY_EX = "skillswap.ex.v1";
-
-let ME  = load(KEY_ME, DEFAULT_ME);
-let EXS = load(KEY_EX, []);
-let VIEW = "discover";
-
-function load(k, fb){
-  try { const v = JSON.parse(localStorage.getItem(k)); return v || structuredClone(fb); }
-  catch(e){ return structuredClone(fb); }
+/* base64url 编解码：让中文档案能安全塞进 URL */
+function encodeProfile(obj){
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let bin = "";
+  for(let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 }
-function save(){
-  try { localStorage.setItem(KEY_ME, JSON.stringify(ME)); localStorage.setItem(KEY_EX, JSON.stringify(EXS)); } catch(e){}
+function decodeProfile(str){
+  const b64 = str.replace(/-/g,"+").replace(/_/g,"/");
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 /* =========================================================
-   匹配引擎（核心）
-   双向互补：我能教 TA 想学的，且 TA 能教我想学的
+   1. 数据层
    ========================================================= */
-function matchWith(other){
-  const myT = ME.teach.map(t=>t.skill), myL = ME.learn.map(t=>t.skill);
-  const ot  = other.teach.map(t=>t.skill), ol = other.learn.map(t=>t.skill);
-  const has = (arr, s) => arr.some(x => norm(x) === norm(s));
+const SEED_USERS = [
+  {id:"u1",name:"林小满",avatar:"🎸",city:"上海",rating:4.9,bio:"乐队吉他手，周末有空",
+   teach:[{skill:"吉他",level:"精通"},{skill:"乐理",level:"熟练"}],
+   learn:[{skill:"Python",level:"零基础"},{skill:"英语口语",level:"入门"}]},
+  {id:"u2",name:"陈野",avatar:"📷",city:"北京",rating:4.8,bio:"自由摄影师，想转行做数据",
+   teach:[{skill:"摄影",level:"精通"},{skill:"后期修图",level:"熟练"}],
+   learn:[{skill:"Python",level:"入门"},{skill:"视频剪辑",level:"零基础"}]},
+  {id:"u3",name:"顾言",avatar:"🎹",city:"成都",rating:5.0,bio:"做编曲，想学点自动化",
+   teach:[{skill:"吉他",level:"精通"},{skill:"编曲",level:"熟练"}],
+   learn:[{skill:"Python",level:"零基础"},{skill:"数据分析",level:"入门"}]},
+  {id:"u4",name:"老K",avatar:"🏋️",city:"成都",rating:4.7,bio:"健身教练，带过 200+ 学员",
+   teach:[{skill:"健身",level:"精通"},{skill:"营养搭配",level:"熟练"}],
+   learn:[{skill:"Python",level:"零基础"},{skill:"咖啡拉花",level:"入门"}]},
+  {id:"u5",name:"Mona",avatar:"🗣️",city:"上海",rating:4.9,bio:"外企市场，雅思 8",
+   teach:[{skill:"英语口语",level:"精通"},{skill:"雅思",level:"熟练"}],
+   learn:[{skill:"Python",level:"入门"},{skill:"书法",level:"零基础"}]},
+  {id:"u6",name:"周予",avatar:"🎬",city:"杭州",rating:4.6,bio:"Vlog 剪辑师，想学门乐器",
+   teach:[{skill:"视频剪辑",level:"精通"},{skill:"Vlog 策划",level:"熟练"}],
+   learn:[{skill:"吉他",level:"零基础"},{skill:"书法",level:"入门"}]},
+  {id:"u7",name:"苏晚",avatar:"🍰",city:"广州",rating:4.8,bio:"开私房烘焙，想拍好看的产品图",
+   teach:[{skill:"烘焙",level:"精通"},{skill:"咖啡拉花",level:"熟练"}],
+   learn:[{skill:"摄影",level:"零基础"},{skill:"Excel",level:"入门"}]},
+  {id:"u8",name:"郑植",avatar:"✍️",city:"武汉",rating:4.9,bio:"书协会员，业余教字",
+   teach:[{skill:"书法",level:"精通"},{skill:"手绘",level:"熟练"}],
+   learn:[{skill:"视频剪辑",level:"零基础"},{skill:"演讲",level:"入门"}]},
+  {id:"u9",name:"吴旻",avatar:"📊",city:"南京",rating:4.5,bio:"咨询顾问，PPT 和表格是饭碗",
+   teach:[{skill:"Excel",level:"精通"},{skill:"PPT",level:"熟练"}],
+   learn:[{skill:"英语口语",level:"入门"},{skill:"健身",level:"零基础"}]}
+];
+const DEFAULT_ME = {
+  name:"我", city:"上海", avatar:"🧑‍💻",
+  teach:[{skill:"Python",level:"精通"},{skill:"数据分析",level:"熟练"}],
+  learn:[{skill:"吉他",level:"零基础"},{skill:"摄影",level:"入门"}]
+};
+const STEPS = ["待对方确认","进行中","待互评","已完成"];
+const K_ME="skillswap.me.v2", K_EX="skillswap.ex.v2";
 
-  // 我能教、TA 想学 → 我能给 TA 的
-  const iGive = myT.filter(s => has(ol, s));
-  // TA 能教、我想学 → 我能从 TA 那拿到的
-  const iGet  = ot.filter(s => has(myL, s));
-
-  const bilateral = iGive.length > 0 && iGet.length > 0;
-  // 双向互补优先，其次看可交换的技能条数
-  const score = bilateral
-    ? 100 + (iGive.length + iGet.length) * 5
-    : (iGive.length * 2 + iGet.length) * 10;
-
-  return { iGive, iGet, bilateral, score };
+function load(k, fb){
+  try{ const v = JSON.parse(localStorage.getItem(k)); return v || JSON.parse(JSON.stringify(fb)); }
+  catch(e){ return JSON.parse(JSON.stringify(fb)); }
 }
+let ME = load(K_ME, DEFAULT_ME);
+let EXS = load(K_EX, []);
+let PEER = null;          // 从交换链接解出的对方档案
+let HOURS = {give:4, learn:4};
 
+function persist(){ try{ localStorage.setItem(K_ME, JSON.stringify(ME)); localStorage.setItem(K_EX, JSON.stringify(EXS)); }catch(e){} }
+
+/* =========================================================
+   2. 匹配引擎
+   ========================================================= */
+function matchCore(a, b){
+  const has = (arr, s) => arr.some(x => norm(x.skill) === norm(s));
+  const iGive = a.teach.filter(t => has(b.learn, t.skill)).map(t => t.skill);   // a 能教给 b 的
+  const iGet  = b.teach.filter(t => has(a.learn, t.skill)).map(t => t.skill);   // b 能教给 a 的
+  const bilateral = iGive.length > 0 && iGet.length > 0;
+  const score = bilateral ? 100 + (iGive.length + iGet.length) * 5
+                          : (iGive.length * 2 + iGet.length) * 10;
+  return {iGive, iGet, bilateral, score};
+}
+const matchWith = other => matchCore(ME, other);
 function ranked(){
-  return SEED_USERS
-    .map(u => ({ u, m: matchWith(u) }))
+  return SEED_USERS.map(u => ({u, m:matchWith(u)}))
     .filter(x => x.m.score > 0)
     .sort((a,b) => b.m.score - a.m.score);
 }
 
 /* =========================================================
-   渲染
+   3. 反馈层：L2 Toast / L3 Modal
    ========================================================= */
+function toast(text, kind, action){
+  kind = kind || "info";
+  const el = document.createElement("div");
+  el.className = "toast"; el.dataset.kind = kind; el.setAttribute("role","status");
+  const ic = kind === "error" ? ICON.warn : kind === "success" ? ICON.check : ICON.info;
+  el.innerHTML = ic + '<span class="txt">' + esc(text) + '</span>';
+  if(action){
+    const b = document.createElement("button");
+    b.className = "act"; b.textContent = action.label;
+    b.onclick = () => { remove(); action.run(); };
+    el.appendChild(b);
+  }
+  $("#toasts").appendChild(el);
+  const life = action ? 7000 : 3200;
+  const timer = setTimeout(remove, life);
+  function remove(){ clearTimeout(timer); el.style.animation = "fade-in var(--dur-sm) var(--ease-accelerate) reverse both";
+    setTimeout(() => el.remove(), 180); }
+  return remove;
+}
+let modalResolve = null;
+function confirmModal(title, body, okLabel){
+  $("#modalTitleText").textContent = title;
+  $("#modalBody").textContent = body;
+  $("#modalOk").textContent = okLabel || "确认删除";
+  const m = $("#modal");
+  m.hidden = false;
+  const prev = document.activeElement;
+  $("#modalCancel").focus();
+  return new Promise(res => {
+    modalResolve = v => { m.hidden = true; modalResolve = null; if(prev && prev.focus) prev.focus(); res(v); };
+  });
+}
+$("#modalCancel").onclick   = () => modalResolve && modalResolve(false);
+$("#modalOk").onclick       = () => modalResolve && modalResolve(true);
+$("#modal").onclick         = e => { if(e.target.id === "modal") modalResolve && modalResolve(false); };
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape" && !$("#modal").hidden) modalResolve && modalResolve(false);
+});
+
+/* L0：档案自动保存的内联状态，不升级为 Toast */
+let saveTimer = null;
+function flashSave(){
+  const el = $("#saveState"), tx = $("#saveText");
+  el.dataset.state = "saving"; tx.textContent = "保存中…";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { el.dataset.state = "saved"; tx.textContent = "已保存"; }, 220);
+}
+
+/* =========================================================
+   4. 渲染
+   ========================================================= */
+function go(view){
+  $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.go === view)));
+  $$(".view").forEach(v => { v.hidden = (v.id !== "v-" + view); });
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+$$("nav.tabs button").forEach(b => { b.onclick = () => go(b.dataset.go); });
+
 function renderAll(){
+  renderProposal();
   renderDiscover();
   renderProfile();
   renderExchanges();
-  const n = EXS.filter(e => e.status !== "done").length;
-  const c = document.getElementById("exCnt");
-  c.textContent = n; c.style.display = n ? "" : "none";
+  const n = EXS.filter(e => e.status !== "已完成").length;
+  const c = $("#exCnt"); c.textContent = n; c.hidden = !n;
 }
 
+/* ---------- 交换提案：真实两人匹配 ---------- */
+function renderProposal(){
+  const slot = $("#proposalSlot");
+  if(!PEER){ slot.innerHTML = ""; return; }
+  const m = matchCore(ME, PEER);
+  const already = EXS.some(e => e.peerId === PEER.peerId);
+  const badge = m.bilateral
+    ? '<span class="pill p-star">' + ICON.star + '双向互补</span>'
+    : (m.score > 0 ? '<span class="pill p-gray">部分匹配</span>' : '<span class="pill p-warn">' + ICON.warn + '暂无交集</span>');
+
+  let dealHtml;
+  if(m.score === 0){
+    dealHtml = '<div class="deal"><div class="side"><div class="v">你们暂时没有可交换的技能</div></div></div>';
+  }else{
+    dealHtml =
+      '<div class="deal">' +
+        '<div class="side"><div class="lb" style="color:var(--success)">你教 TA</div><div class="v">' +
+          (m.iGive.length ? m.iGive.map(s => icon(s) + " " + esc(s)).join("、") : "—") + '</div></div>' +
+        '<div class="swap" aria-hidden="true">' + ICON.swap + '</div>' +
+        '<div class="side"><div class="lb" style="color:var(--primary-dark)">TA 教你</div><div class="v">' +
+          (m.iGet.length ? m.iGet.map(s => icon(s) + " " + esc(s)).join("、") : "—") + '</div></div>' +
+      '</div>';
+  }
+
+  const hoursHtml = m.score > 0 ? (
+    '<div class="hours">' +
+      '<div class="grp"><span class="lb">我教 TA</span>' +
+        '<div class="stepper">' +
+          '<button data-h="give" data-d="-1" aria-label="减少我教的课时"' + (HOURS.give<=1?" disabled":"") + '>' + ICON.minus + '</button>' +
+          '<span class="val" id="hGive" aria-live="polite">' + HOURS.give + ' 课时</span>' +
+          '<button data-h="give" data-d="1" aria-label="增加我教的课时">' + ICON.plus + '</button>' +
+        '</div></div>' +
+      '<div class="grp"><span class="lb">TA 教我</span>' +
+        '<div class="stepper">' +
+          '<button data-h="learn" data-d="-1" aria-label="减少 TA 教的课时"' + (HOURS.learn<=1?" disabled":"") + '>' + ICON.minus + '</button>' +
+          '<span class="val" id="hLearn" aria-live="polite">' + HOURS.learn + ' 课时</span>' +
+          '<button data-h="learn" data-d="1" aria-label="增加 TA 教的课时">' + ICON.plus + '</button>' +
+        '</div></div>' +
+      '<div class="note">课时可以不对等 —— 技能难度与稀缺度不同时，双方议定比例即可（如 2 课时烘焙换 1 课时摄影）。</div>' +
+    '</div>') : "";
+
+  slot.innerHTML =
+    '<div class="glass-strong proposal">' +
+      '<div class="ph">' +
+        '<div class="av" aria-hidden="true">' + esc(PEER.avatar || "🙂") + '</div>' +
+        '<div><h2>' + esc(PEER.name || "一位朋友") + ' 想和你交换技能</h2>' +
+        '<div class="mbio">' + esc(PEER.city || "未填城市") + ' · 通过交换链接分享了自己的档案</div></div>' +
+        '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">' + badge + '</div>' +
+      '</div>' +
+      dealHtml + hoursHtml +
+      '<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">' +
+        (m.score > 0
+          ? '<button class="btn btn-primary" id="acceptBtn"' + (already ? ' disabled' : '') + '>' +
+            ICON.swap + (already ? "已发起过交换" : "接受这次交换") + '</button>'
+          : '<button class="btn" disabled>暂无可交换的技能</button>') +
+        '<button class="btn btn-ghost" id="dismissBtn">忽略</button>' +
+      '</div>' +
+    '</div>';
+
+  const acc = $("#acceptBtn");
+  if(acc && !already){
+    acc.onclick = e => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>正在建立交换…';
+      setTimeout(() => {
+        EXS.unshift({
+          peerId: PEER.peerId || ("peer-" + Date.now()), name:PEER.name || "一位朋友",
+          avatar:PEER.avatar || "🙂", city:PEER.city || "未填城市",
+          iGive:m.iGive, iGet:m.iGet, give:HOURS.give, learn:HOURS.learn,
+          status:STEPS[0], date:new Date().toISOString().slice(0,10), fromLink:true
+        });
+        persist();
+        PEER = null;
+        history.replaceState(null, "", location.pathname + location.search.replace(/[?&]s=[^&]*/,"").replace(/^&/,"?"));
+        renderAll();
+        toast("交换已建立 · 等待对方确认", "success");
+        go("exchanges");
+      }, 480);
+    };
+  }
+  const dis = $("#dismissBtn");
+  if(dis) dis.onclick = () => { PEER = null; renderAll(); history.replaceState(null, "", location.pathname); };
+}
+
+/* ---------- 发现匹配 ---------- */
 function renderDiscover(){
   const list = ranked();
   const bi = list.filter(x => x.m.bilateral);
   const skillSet = new Set();
   SEED_USERS.concat([ME]).forEach(u => {
-    u.teach.forEach(t=>skillSet.add(norm(t.skill)));
-    u.learn.forEach(t=>skillSet.add(norm(t.skill)));
+    u.teach.forEach(t => skillSet.add(norm(t.skill)));
+    u.learn.forEach(t => skillSet.add(norm(t.skill)));
   });
+  $("#stUsers").textContent  = SEED_USERS.length + 1;
+  $("#stSkills").textContent = skillSet.size;
+  $("#stMatch").textContent  = bi.length;
+  $("#stEx").textContent     = EXS.length;
+  $("#matchSub").textContent = bi.length
+    ? "其中 " + bi.length + " 位可以和你互教互学"
+    : "暂未发现双向互补对象，试试补充「我想学」";
 
-  document.getElementById("stUsers").textContent  = SEED_USERS.length + 1;
-  document.getElementById("stSkills").textContent = skillSet.size;
-  document.getElementById("stMatch").textContent  = bi.length;
-  document.getElementById("stEx").textContent     = EXS.length;
-  document.getElementById("matchSub").textContent =
-    bi.length ? `其中 ${bi.length} 位可以和你互教互学 ⭐` : "暂未发现双向互补对象，试试补充「我想学」";
-
-  const el = document.getElementById("mlist");
+  const el = $("#mlist");
   if(!list.length){
-    el.innerHTML = `<div class="empty">还没有匹配结果。去「我的技能」补充你想学的技能，匹配会更准。</div>`;
+    el.innerHTML = '<div class="empty">还没有匹配结果。去「我的技能」补充你想学的技能，匹配会更准。</div>';
     renderDemand(); return;
   }
-
-  el.innerHTML = list.map(({u,m}) => {
-    const done = EXS.some(e => e.uid === u.id);
+  el.innerHTML = list.map(({u, m}, i) => {
+    const done = EXS.some(e => e.peerId === u.id);
     let reason;
-    if(m.bilateral){
-      reason = `<b>完美互补</b>：你教 TA ${m.iGive.map(esc).join("、")}，TA 教你 ${m.iGet.map(esc).join("、")} —— 一次交换，两边都赚到。`;
-    } else if(m.iGive.length){
-      reason = `TA 正在找人学 ${m.iGive.map(esc).join("、")}，这正好是你的强项。`;
-    } else {
-      reason = `TA 能教你 ${m.iGet.map(esc).join("、")}，正是你列在「想学」里的。`;
-    }
-    return `
-    <div class="card mcard ${m.bilateral?"bi":""}">
-      <div class="av">${u.avatar}</div>
-      <div class="mbody">
-        <div class="mtop">
-          <span class="nm">${esc(u.name)}</span>
-          <span class="meta">${esc(u.city)} · ⭐ ${u.rating}</span>
-          ${m.bilateral ? `<span class="pill p-star">⭐ 双向互补</span>` : ``}
-          ${m.score > 0 && !m.bilateral ? `<span class="pill p-gray">单向匹配</span>` : ``}
-        </div>
-        <div class="meta" style="font-size:13px;color:#64748b;margin-top:3px">${esc(u.bio)}</div>
-        <div class="row2">
-          <div class="col">
-            <div class="lb">TA 能教你</div>
-            <div class="chips">${u.teach.map(t =>
-              `<span class="chip ${m.iGet.some(s=>norm(s)===norm(t.skill))?"hit":""}">${icon(t.skill)} ${esc(t.skill)} · ${esc(t.level)}</span>`).join("")}</div>
-          </div>
-          <div class="col">
-            <div class="lb">TA 想学</div>
-            <div class="chips">${u.learn.map(t =>
-              `<span class="chip ${m.iGive.some(s=>norm(s)===norm(t.skill))?"hit-l":""}">${icon(t.skill)} ${esc(t.skill)}</span>`).join("")}</div>
-          </div>
-        </div>
-        <div class="reason ${m.bilateral?"bi":""}">${reason}</div>
-      </div>
-      <div class="acts">
-        <div class="score">匹配分 ${m.score}</div>
-        <button class="btn ${done?"done":"primary"}" ${done?"disabled":""}
-          data-ex="${u.id}">${done ? "已发起" : "发起交换"}</button>
-      </div>
-    </div>`;
+    if(m.bilateral)      reason = "<b>完美互补</b>：你教 TA " + m.iGive.map(esc).join("、") + "，TA 教你 " + m.iGet.map(esc).join("、") + " —— 一次交换，两边都赚到。";
+    else if(m.iGive.length) reason = "TA 正在找人学 " + m.iGive.map(esc).join("、") + "，这正好是你的强项。";
+    else                 reason = "TA 能教你 " + m.iGet.map(esc).join("、") + "，正是你列在「想学」里的。";
+    const badge = m.bilateral
+      ? '<span class="pill p-star">' + ICON.star + '双向互补</span>'
+      : '<span class="pill p-gray">单向匹配</span>';
+    return '<article class="mcard glass stagger" style="--i:' + i + '">' +
+      '<div class="av" aria-hidden="true">' + esc(u.avatar) + '</div>' +
+      '<div class="mbody">' +
+        '<div class="mtop"><span class="nm">' + esc(u.name) + '</span>' +
+          '<span class="meta">' + esc(u.city) + ' · ⭐ ' + u.rating + '</span>' + badge + '</div>' +
+        '<div class="mbio">' + esc(u.bio) + '</div>' +
+        '<div class="row2">' +
+          '<div class="col"><div class="lb">TA 能教你</div><div class="chips">' +
+            u.teach.map(t => '<span class="chip ' + (m.iGet.some(s => norm(s) === norm(t.skill)) ? "hit" : "") + '">' + icon(t.skill) + ' ' + esc(t.skill) + ' · ' + esc(t.level) + '</span>').join("") +
+          '</div></div>' +
+          '<div class="col"><div class="lb">TA 想学</div><div class="chips">' +
+            u.learn.map(t => '<span class="chip ' + (m.iGive.some(s => norm(s) === norm(t.skill)) ? "hit-l" : "") + '">' + icon(t.skill) + ' ' + esc(t.skill) + '</span>').join("") +
+          '</div></div>' +
+        '</div>' +
+        '<div class="reason ' + (m.bilateral ? "bi" : "") + '">' + reason + '</div>' +
+      '</div>' +
+      '<div class="acts">' +
+        '<div class="score">匹配分 ' + m.score + '</div>' +
+        '<button class="btn ' + (done ? "" : "btn-primary") + ' btn-sm" data-ex="' + u.id + '"' + (done ? " disabled" : "") + '>' +
+          (done ? ICON.check + "已发起" : ICON.swap + "发起交换") + '</button>' +
+      '</div></article>';
   }).join("");
-
   renderDemand();
 }
 
 function renderDemand(){
-  // 统计每个技能的「想学人数」和「能教人数」
   const map = {};
   SEED_USERS.concat([ME]).forEach(u => {
-    u.learn.forEach(t => { const k = t.skill; (map[k] ||= {want:0,can:0}).want++; });
-    u.teach.forEach(t => { const k = t.skill; (map[k] ||= {want:0,can:0}).can++;  });
+    u.learn.forEach(t => { const k = t.skill; (map[k] = map[k] || {want:0,can:0}).want++; });
+    u.teach.forEach(t => { const k = t.skill; (map[k] = map[k] || {want:0,can:0}).can++; });
   });
   const rows = Object.entries(map)
-    .filter(([,v]) => v.want + v.can >= 2)
-    .sort((a,b) => (b[1].want - b[1].can) - (a[1].want - a[1].can))
+    .filter(([, v]) => v.want + v.can >= 2)
+    .sort((a, b) => (b[1].want - b[1].can) - (a[1].want - a[1].can))
     .slice(0, 7);
-  const max = Math.max(...rows.map(([,v]) => Math.max(v.want, v.can)), 1);
-
-  document.getElementById("demand").innerHTML = rows.map(([k,v]) => `
-    <div class="drow">
-      <div class="nm">${icon(k)} ${esc(k)}</div>
-      <div class="bar"><i class="want" style="width:${v.want/max*100}%"></i></div>
-      <div class="num">想学 ${v.want} · 能教 ${v.can}</div>
-    </div>`).join("") + `
-    <div class="legend">
-      <span><i style="background:#6366f1"></i>想学人数</span>
-      <span><i style="background:#059669"></i>能教人数</span>
-    </div>
-    ${rows.some(([,v]) => v.want > v.can)
-      ? `<div class="notice">供需缺口提示：想学的人多于能教的人。若你正好擅长，在这里开课会很快被抢 —— 这正是平台要做撮合的价值。</div>` : ``}`;
+  const max = Math.max.apply(null, rows.map(([, v]) => Math.max(v.want, v.can)).concat([1]));
+  const gap = rows.filter(([, v]) => v.want > v.can);
+  $("#demand").innerHTML = rows.map(([k, v]) =>
+    '<div class="drow"><div class="nm">' + icon(k) + ' ' + esc(k) + '</div>' +
+    '<div class="bar"><i class="want" style="width:' + (v.want / max * 100) + '%"></i></div>' +
+    '<div class="num">想学 ' + v.want + ' · 能教 ' + v.can + '</div></div>').join("") +
+    '<div class="legend"><span><i style="background:var(--primary)"></i>想学人数</span>' +
+    '<span><i style="background:var(--success)"></i>能教人数</span></div>' +
+    (gap.length ? '<div class="notice">' + ICON.warn + '<span>供需缺口：' + esc(gap[0][0]) + ' 等技能想学的人多于能教的人。若你正好擅长，在这里发布会很快被抢 —— 这正是平台撮合的价值。</span></div>' : "");
 }
 
+/* ---------- 我的技能 ---------- */
 function renderProfile(){
-  document.getElementById("meName").value = ME.name;
-  document.getElementById("meCity").value = ME.city;
-  document.getElementById("teachList").innerHTML = ME.teach.length
-    ? ME.teach.map((t,i) => `<div class="sitem"><span>${icon(t.skill)}</span>
-        <span class="nm">${esc(t.skill)}</span><span class="lv">${esc(t.level)}</span>
-        <button class="x" data-del="teach" data-i="${i}" title="移除">✕</button></div>`).join("")
-    : `<div class="empty">还没有添加 —— 你会的比你以为的多</div>`;
-  document.getElementById("learnList").innerHTML = ME.learn.length
-    ? ME.learn.map((t,i) => `<div class="sitem"><span>${icon(t.skill)}</span>
-        <span class="nm">${esc(t.skill)}</span><span class="lv">${esc(t.level)}</span>
-        <button class="x" data-del="learn" data-i="${i}" title="移除">✕</button></div>`).join("")
-    : `<div class="empty">想学什么？写下来才会被匹配到</div>`;
+  $("#meName").value = ME.name || "";
+  $("#meCity").value = ME.city || "";
+  const list = (arr, kind) => arr.length
+    ? arr.map((t, i) =>
+        '<div class="sitem"><span aria-hidden="true">' + icon(t.skill) + '</span>' +
+        '<span class="nm">' + esc(t.skill) + '</span><span class="lv">' + esc(t.level) + '</span>' +
+        '<button class="icon-btn" data-del="' + kind + '" data-i="' + i + '" aria-label="移除 ' + esc(t.skill) + '">' + ICON.trash + '</button></div>').join("")
+    : '<div class="empty">' + (kind === "teach" ? "还没有添加 —— 你会的比你以为的多" : "想学什么？写下来才会被匹配到") + '</div>';
+  $("#teachList").innerHTML = list(ME.teach, "teach");
+  $("#learnList").innerHTML = list(ME.learn, "learn");
 }
 
-const STEPS = ["待对方确认", "进行中", "待互评", "已完成"];
+/* ---------- 交换记录 ---------- */
 function renderExchanges(){
-  const el = document.getElementById("exList");
+  const el = $("#exList");
   if(!EXS.length){
-    el.innerHTML = `<div class="card panel"><div class="empty">还没有发起过交换。去「发现匹配」找一位互补伙伴试试。</div></div>`;
+    el.innerHTML = '<div class="glass panel"><div class="empty">还没有发起过交换。去「发现匹配」找一位互补伙伴，或到「我的技能」生成交换链接发给朋友。</div></div>';
     return;
   }
-  el.innerHTML = EXS.map((e,idx) => {
+  el.innerHTML = EXS.map((e, idx) => {
     const stage = STEPS.indexOf(e.status);
-    return `
-    <div class="card ex">
-      <div class="hd">
-        <div class="av" style="width:38px;height:38px;flex:0 0 38px;font-size:19px">${e.avatar}</div>
-        <div>
-          <div style="font-weight:680">与 ${esc(e.name)} 的技能交换</div>
-          <div class="meta" style="color:#64748b;font-size:12.5px">${esc(e.city)} · 发起于 ${esc(e.date)}</div>
-        </div>
-        <span class="pill ${stage>=3?"p-teach":stage>=1?"p-learn":"p-gray"}" style="margin-left:auto">${esc(e.status)}</span>
-      </div>
-      <div class="deal">
-        <div class="side"><div class="lb" style="color:#059669">你教 TA</div>
-          <div class="v">${e.iGive.map(s=>icon(s)+" "+esc(s)).join("、") || "—"}</div></div>
-        <div class="swap-ico">⇄</div>
-        <div class="side"><div class="lb" style="color:#4f46e5">TA 教你</div>
-          <div class="v">${e.iGet.map(s=>icon(s)+" "+esc(s)).join("、") || "—"}</div></div>
-      </div>
-      <div class="steps">${STEPS.map((s,i) =>
-        `<div class="step ${i===stage?"on":i<stage?"past":""}">${s}</div>`).join("")}</div>
-      <div style="margin-top:13px;display:flex;gap:9px">
-        ${stage < 3
-          ? `<button class="btn primary" data-adv="${idx}">推进到「${STEPS[stage+1]}」</button>`
-          : `<span class="pill p-teach">交换已完成 · 双方各得一门新技能</span>`}
-        <button class="btn" data-rm="${idx}">删除</button>
-      </div>
-    </div>`;
+    const tone = stage >= 3 ? "p-teach" : stage >= 1 ? "p-learn" : "p-gray";
+    const sIcon = stage >= 3 ? ICON.check : stage >= 1 ? ICON.swap : ICON.info;
+    return '<article class="ex glass" style="--i:' + idx + '">' +
+      '<div class="hd">' +
+        '<div class="av" style="width:40px;height:40px;flex:0 0 40px;font-size:19px" aria-hidden="true">' + esc(e.avatar) + '</div>' +
+        '<div><div class="nm">与 ' + esc(e.name) + ' 的技能交换</div>' +
+        '<div class="mbio">' + esc(e.city) + ' · ' + esc(e.date) + (e.fromLink ? ' · 来自交换链接' : '') + '</div></div>' +
+        '<span class="pill ' + tone + '" style="margin-left:auto">' + sIcon + esc(e.status) + '</span>' +
+      '</div>' +
+      '<div class="deal">' +
+        '<div class="side"><div class="lb" style="color:var(--success)">你教 TA</div><div class="v">' +
+          (e.iGive.length ? e.iGive.map(s => icon(s) + " " + esc(s)).join("、") : "—") + '</div>' +
+          '<div class="mbio">' + (e.give || 4) + ' 课时</div></div>' +
+        '<div class="swap" aria-hidden="true">' + ICON.swap + '</div>' +
+        '<div class="side"><div class="lb" style="color:var(--primary-dark)">TA 教你</div><div class="v">' +
+          (e.iGet.length ? e.iGet.map(s => icon(s) + " " + esc(s)).join("、") : "—") + '</div>' +
+          '<div class="mbio">' + (e.learn || 4) + ' 课时</div></div>' +
+      '</div>' +
+      '<div class="steps">' + STEPS.map((s, i) =>
+        '<div class="step ' + (i === stage ? "on" : i < stage ? "past" : "") + '">' +
+        (i < stage ? ICON.check : "") + s + '</div>').join("") + '</div>' +
+      '<div style="margin-top:14px;display:flex;gap:9px;flex-wrap:wrap">' +
+        (stage < 3
+          ? '<button class="btn btn-primary btn-sm" data-adv="' + idx + '">推进到「' + STEPS[stage + 1] + '」</button>'
+          : '<span class="pill p-teach">' + ICON.check + '交换已完成 · 双方各得一门新技能</span>') +
+        '<button class="btn btn-sm" data-rm="' + idx + '">' + ICON.trash + '删除</button>' +
+      '</div></article>';
   }).join("");
 }
 
 /* =========================================================
-   交互
+   5. 交换链接任务（taskId 贯穿：idle → running → succeeded / failed）
    ========================================================= */
-document.querySelectorAll("nav.tabs button").forEach(b => {
-  b.onclick = () => {
-    VIEW = b.dataset.go;
-    document.querySelectorAll("nav.tabs button").forEach(x => x.classList.toggle("on", x === b));
-    document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + VIEW));
-    window.scrollTo({ top:0, behavior:"smooth" });
-  };
-});
+let taskSeq = 0;
+function renderTask(state, payload){
+  const slot = $("#taskSlot");
+  const id = payload && payload.taskId ? payload.taskId : "task-" + (++taskSeq);
+  const panelId = "task-panel-" + id;
 
-document.querySelectorAll("[data-add]").forEach(b => {
-  b.onclick = () => {
-    const kind = b.dataset.add;
-    const inp = document.getElementById(kind + "Input");
-    const lvl = document.getElementById(kind + "Level");
-    const name = inp.value.trim();
-    if(!name) { inp.focus(); return; }
-    if(ME[kind].some(x => norm(x.skill) === norm(name))) { inp.value=""; inp.focus(); return; }
-    ME[kind].push({ skill:name, level:lvl.value });
-    inp.value = ""; inp.focus();
-    save(); renderAll();
+  if(state === "idle"){
+    slot.innerHTML = '<button class="btn btn-primary" id="genBtn">' + ICON.link + '生成我的交换链接</button>';
+    $("#genBtn").onclick = () => runTask(id, panelId);
+    return;
+  }
+  if(state === "running"){
+    slot.innerHTML = '<button class="task-pill" data-state="running" aria-controls="' + panelId + '" aria-expanded="false">' +
+      '<span class="spinner" aria-hidden="true"></span><span>生成交换链接</span>' +
+      '<span class="status-text">处理中…</span></button>';
+    return;
+  }
+  if(state === "failed"){
+    slot.innerHTML = '<button class="task-pill" data-state="failed" id="retryBtn" aria-controls="' + panelId + '" aria-expanded="false">' +
+      ICON.warn + '<span>生成交换链接</span><span class="status-text">失败 · 点击重试</span></button>';
+    $("#retryBtn").onclick = () => runTask(id, panelId);
+    return;
+  }
+  /* succeeded：同一任务 ID 原位展开为结果面板 */
+  slot.innerHTML =
+    '<button class="task-pill" data-state="succeeded" aria-controls="' + panelId + '" aria-expanded="true">' +
+      ICON.check + '<span>交换链接已生成</span></button>' +
+    '<div class="link-panel" id="' + panelId + '" role="region" aria-label="交换链接结果">' +
+      '<textarea id="linkOut" readonly aria-label="你的交换链接">' + esc(payload.url) + '</textarea>' +
+      '<div class="row">' +
+        '<button class="btn btn-primary btn-sm" id="copyBtn">' + ICON.copy + '复制链接</button>' +
+        '<button class="btn btn-ghost btn-sm" id="testBtn">在新标签打开（预览对方视角）</button>' +
+        '<span class="mbio" id="copyState" role="status" aria-live="polite"></span>' +
+      '</div>' +
+    '</div>';
+  const ta = $("#linkOut");
+  $("#copyBtn").onclick = async () => {
+    const btn = $("#copyBtn"), st = $("#copyState");
+    btn.disabled = true;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(payload.url);
+      }else{
+        ta.select(); document.execCommand("copy");
+      }
+      btn.disabled = false;
+      btn.innerHTML = ICON.check + "已复制";
+      st.textContent = "已复制到剪贴板";
+      setTimeout(() => { btn.innerHTML = ICON.copy + "复制链接"; st.textContent = ""; }, 2200);
+    }catch(err){
+      btn.disabled = false;
+      st.textContent = "自动复制被浏览器拦截";
+      toast("自动复制失败，请手动全选链接复制", "error", {
+        label:"全选链接",
+        run: () => { ta.focus(); ta.select(); }
+      });
+    }
   };
-});
-["teachInput","learnInput"].forEach(id => {
-  document.getElementById(id).addEventListener("keydown", e => {
-    if(e.key === "Enter") document.querySelector(`[data-add="${id.replace("Input","")}"]`).click();
-  });
-});
+  $("#testBtn").onclick = () => window.open(payload.url, "_blank", "noopener");
+}
 
-document.addEventListener("click", e => {
-  const add = e.target.closest("[data-add]");           if(add) return;
+function runTask(id, panelId){
+  renderTask("running", {taskId:id});
+  setTimeout(() => {
+    try{
+      const payload = {
+        v:2,
+        peerId:"peer-" + Date.now(),
+        name:ME.name || "一位朋友",
+        city:ME.city || "",
+        avatar:ME.avatar || "🧑‍💻",
+        teach:ME.teach.map(t => [t.skill, t.level]),
+        learn:ME.learn.map(t => [t.skill, t.level])
+      };
+      if(!ME.teach.length && !ME.learn.length) throw new Error("empty");
+      const code = encodeProfile(payload);
+      const url = location.origin + location.pathname + "?s=" + code;
+      renderTask("succeeded", {taskId:id, url:url});
+    }catch(err){
+      renderTask("failed", {taskId:id});
+      toast("链接生成失败：你的技能档案还是空的，先添加至少一项技能", "error");
+    }
+  }, 520);
+}
+
+/* =========================================================
+   6. 事件
+   ========================================================= */
+document.addEventListener("click", async e => {
   const del = e.target.closest("[data-del]");
-  if(del){ ME[del.dataset.del].splice(+del.dataset.i, 1); save(); renderAll(); return; }
-
+  if(del){
+    const kind = del.dataset.del, i = +del.dataset.i, name = ME[kind][i].skill;
+    ME[kind].splice(i, 1); persist(); flashSave(); renderAll();
+    toast("已移除「" + name + "」", "info");
+    return;
+  }
   const ex = e.target.closest("[data-ex]");
   if(ex){
     const u = SEED_USERS.find(x => x.id === ex.dataset.ex);
     const m = matchWith(u);
-    EXS.unshift({
-      uid:u.id, name:u.name, avatar:u.avatar, city:u.city,
-      iGive:m.iGive, iGet:m.iGet,
-      status:STEPS[0], date:new Date().toISOString().slice(0,10)
-    });
-    save(); renderAll();
-    document.querySelector('nav.tabs button[data-go="exchanges"]').click();
+    ex.disabled = true;
+    ex.innerHTML = '<span class="spinner" aria-hidden="true"></span>建立中';
+    setTimeout(() => {
+      EXS.unshift({peerId:u.id, name:u.name, avatar:u.avatar, city:u.city,
+        iGive:m.iGive, iGet:m.iGet, give:4, learn:4, status:STEPS[0],
+        date:new Date().toISOString().slice(0,10)});
+      persist(); renderAll();
+      toast("已向 " + u.name + " 发起交换", "success");
+      go("exchanges");
+    }, 420);
     return;
   }
   const adv = e.target.closest("[data-adv]");
   if(adv){
     const i = +adv.dataset.adv, s = STEPS.indexOf(EXS[i].status);
-    if(s < 3) EXS[i].status = STEPS[s+1];
-    save(); renderAll(); return;
+    if(s < 3) EXS[i].status = STEPS[s + 1];
+    persist(); renderAll();
+    toast("状态更新为「" + EXS[i].status + "」", "success");
+    return;
   }
   const rm = e.target.closest("[data-rm]");
-  if(rm){ EXS.splice(+rm.dataset.rm, 1); save(); renderAll(); return; }
+  if(rm){
+    const i = +rm.dataset.rm, e2 = EXS[i];
+    const ok = await confirmModal("删除这条交换记录？",
+      "你与 " + e2.name + " 的交换记录将被永久删除，包括已推进的进度。此操作不可撤销。", "删除记录");
+    if(ok){ EXS.splice(i, 1); persist(); renderAll(); toast("交换记录已删除", "info"); }
+    return;
+  }
+  const h = e.target.closest("[data-h]");
+  if(h){
+    const key = h.dataset.h, d = +h.dataset.d;
+    HOURS[key] = Math.min(40, Math.max(1, HOURS[key] + d));
+    renderProposal();
+    return;
+  }
+  const add = e.target.closest("[data-add]");
+  if(add){
+    const kind = add.dataset.add;
+    const inp = $("#" + kind + "Input"), lvl = $("#" + kind + "Level");
+    const name = inp.value.trim();
+    if(!name){ inp.focus(); return; }
+    if(ME[kind].some(x => norm(x.skill) === norm(name))){ toast("「" + name + "」已经在列表里了", "info"); inp.value = ""; return; }
+    ME[kind].push({skill:name, level:lvl.value});
+    inp.value = ""; inp.focus(); persist(); flashSave(); renderAll();
+    toast("已添加「" + name + "」", "success");
+  }
+});
+["meName","meCity"].forEach(id => {
+  $("#" + id).addEventListener("input", e => {
+    ME[id === "meName" ? "name" : "city"] = e.target.value;
+    persist(); flashSave();
+  });
+});
+["teachInput","learnInput"].forEach(id => {
+  $("#" + id).addEventListener("keydown", e => {
+    if(e.key === "Enter"){ e.preventDefault(); $('[data-add="' + id.replace("Input","") + '"]').click(); }
+  });
 });
 
-document.getElementById("meName").addEventListener("input", e => { ME.name = e.target.value; save(); });
-document.getElementById("meCity").addEventListener("input", e => { ME.city = e.target.value; save(); });
-
-renderAll();
+/* =========================================================
+   7. 启动：解析交换链接
+   ========================================================= */
+(function boot(){
+  const p = new URLSearchParams(location.search);
+  const s = p.get("s");
+  if(s){
+    try{
+      const raw = decodeProfile(s);
+      PEER = {
+        peerId: raw.peerId, name: raw.name, city: raw.city, avatar: raw.avatar,
+        teach:(raw.teach || []).map(a => ({skill:a[0], level:a[1]})),
+        learn:(raw.learn || []).map(a => ({skill:a[0], level:a[1]}))
+      };
+      if(!PEER.teach.length && !PEER.learn.length) throw new Error("empty");
+    }catch(err){
+      PEER = null;
+      setTimeout(() => toast("这个交换链接已经损坏或不完整，无法读取对方档案", "error"), 400);
+    }
+  }
+  renderTask("idle", {});
+  renderAll();
+})();
 </script>
 </body>
 </html>
